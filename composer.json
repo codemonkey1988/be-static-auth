@@ -1,0 +1,57 @@
+{
+  "name": "codemonkey1988/be-static-auth",
+  "type": "typo3-cms-extension",
+  "description": "Adds a button to backend login that automatically creates an admin user and log in using it.",
+  "keywords": [
+    "TYPO3",
+    "extension",
+    "backend",
+    "development"
+  ],
+  "authors": [
+    {
+      "name": "Tim Schreiner",
+      "role": "Developer"
+    }
+  ],
+  "license": [
+    "GPL-2.0-or-later"
+  ],
+  "require": {
+    "typo3/cms-core": "^8.7 || ^9.5"
+  },
+  "require-dev": {
+    "friendsofphp/php-cs-fixer": "^2.13",
+    "nimut/testing-framework": "^4.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "Codemonkey1988\\BeStaticAuth\\": "Classes"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Codemonkey1988\\BeStaticAuth\\Tests\\": "Tests"
+    }
+  },
+  "replace": {
+    "be_static_auth": "self.version",
+    "typo3-ter/be-static-auth": "self.version"
+  },
+  "config": {
+    "vendor-dir": ".Build/vendor",
+    "bin-dir": ".Build/bin"
+  },
+  "scripts": {
+    "post-autoload-dump": [
+      "mkdir -p .Build/Web/typo3conf/ext/",
+      "[ -L .Build/Web/typo3conf/ext/be_static_auth ] || ln -snvf ../../../../. .Build/Web/typo3conf/ext/be_static_auth"
+    ]
+  },
+  "extra": {
+    "typo3/cms": {
+      "cms-package-dir": "{$vendor-dir}/typo3/cms",
+      "web-dir": ".Build/Web"
+    }
+  }
+}

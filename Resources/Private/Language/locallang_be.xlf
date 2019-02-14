@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<xliff version="1.0">
+	<file source-language="en" datatype="plaintext" original="messages" date="2019-02-13T06:21:31Z" product-name="be_static_auth">
+		<header/>
+		<body>
+			<trans-unit id="backendLogin.switch.label" xml:space="preserve">
+				<source>Login with static account</source>
+			</trans-unit>
+
+			<trans-unit id="em.basic.username" xml:space="preserve">
+				<source>Username:The username of the admin account that should be used.</source>
+			</trans-unit>
+		</body>
+	</file>
+</xliff>
