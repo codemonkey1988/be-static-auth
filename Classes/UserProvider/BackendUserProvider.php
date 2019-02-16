@@ -2,10 +2,9 @@
 declare(strict_types=1);
 namespace Codemonkey1988\BeStaticAuth\UserProvider;
 
-use TYPO3\CMS\Core\Crypto\Random;
+use Hackzilla\PasswordGenerator\Generator\ComputerPasswordGenerator;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Core\Utility\StringUtility;
 use TYPO3\CMS\Saltedpasswords\Salt\SaltFactory;
 use TYPO3\CMS\Saltedpasswords\Utility\SaltedPasswordsUtility;
 
@@ -111,13 +110,17 @@ class BackendUserProvider implements UserProviderInterface
      */
     protected function generatePassword(): string
     {
-        $randomGenerator = GeneralUtility::makeInstance(Random::class);
-        $randomString = $randomGenerator->generateRandomHexString(mt_rand(40, 60));
-        $password = StringUtility::getUniqueId($randomString);
+        $generator = new ComputerPasswordGenerator();
+        $generator
+            ->setUppercase()
+            ->setLowercase()
+            ->setNumbers()
+            ->setSymbols()
+            ->setLength(64);
 
         if (SaltedPasswordsUtility::isUsageEnabled()) {
             $objInstanceSaltedPW = SaltFactory::getSaltingInstance();
-            $password = $objInstanceSaltedPW->getHashedPassword($password);
+            $password = $objInstanceSaltedPW->getHashedPassword($generator->generatePassword());
         }
 
         return $password;
