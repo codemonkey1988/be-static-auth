@@ -13,7 +13,7 @@ backend with an admin account. Just click on login and let the syste mdo the res
 This extension can currently only be installed by composer.
 
 ```
-composer install codemonkey1988/be-static-auth --dev
+composer require codemonkey1988/be-static-auth --dev
 ```
 
 ## Configuration
