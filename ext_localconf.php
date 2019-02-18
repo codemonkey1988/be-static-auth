@@ -5,7 +5,7 @@ if (\TYPO3\CMS\Core\Utility\GeneralUtility::getApplicationContext()->isDevelopme
     $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['backend']['loginProviders']['static_auth'] = [
         'provider' => \Codemonkey1988\BeStaticAuth\LoginProvider\StaticAdminProvider::class,
         'sorting' => 30,
-        'icon-class' => 'fa-static',
+        'icon-class' => 'fa-key',
         'label' => 'LLL:EXT:be_static_auth/Resources/Private/Language/locallang_be.xlf:backendLogin.switch.label'
     ];
 
