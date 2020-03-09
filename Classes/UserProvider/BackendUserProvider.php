@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace Codemonkey1988\BeStaticAuth\UserProvider;
 
 use Hackzilla\PasswordGenerator\Generator\ComputerPasswordGenerator;
+use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Saltedpasswords\Salt\SaltFactory;
@@ -108,7 +109,7 @@ class BackendUserProvider implements UserProviderInterface
      *
      * @return string
      */
-    protected function generatePassword(): string
+    protected function generatePassword()
     {
         $generator = new ComputerPasswordGenerator();
         $generator
@@ -118,11 +119,25 @@ class BackendUserProvider implements UserProviderInterface
             ->setSymbols()
             ->setLength(64);
 
-        if (SaltedPasswordsUtility::isUsageEnabled()) {
+        return $this->hashPassword($generator->generatePassword());
+    }
+
+    /**
+     * @param string $plainPassword
+     * @return string
+     */
+    protected function hashPassword(string $plainPassword)
+    {
+        // Make usage of deprecated salted password extension.
+        if (class_exists(SaltedPasswordsUtility::class)) {
             $objInstanceSaltedPW = SaltFactory::getSaltingInstance();
-            $password = $objInstanceSaltedPW->getHashedPassword($generator->generatePassword());
+
+            return $objInstanceSaltedPW->getHashedPassword($plainPassword);
         }
 
-        return $password;
+        $hashStrategy = GeneralUtility::makeInstance(PasswordHashFactory::class)
+            ->getDefaultHashInstance('BE');
+
+        return $hashStrategy->getHashedPassword($plainPassword);
     }
 }
