@@ -36,7 +36,6 @@
     }
   },
   "replace": {
-    "be_static_auth": "self.version",
     "typo3-ter/be-static-auth": "self.version"
   },
   "config": {
