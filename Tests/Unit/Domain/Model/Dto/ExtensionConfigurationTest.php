@@ -1,5 +1,14 @@
 <?php
+
 declare(strict_types=1);
+
+/*
+ * This file is part of the "be_static_auth" Extension for TYPO3 CMS.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
+ */
+
 namespace Codemonkey1988\BeStaticAuth\Tests\Unit\Domain\Model\Dto;
 
 use Codemonkey1988\BeStaticAuth\Domain\Model\Dto\ExtensionConfiguration;
@@ -14,7 +23,7 @@ class ExtensionConfigurationTest extends UnitTestCase
     {
         $subject = new ExtensionConfiguration([]);
 
-        $this->assertSame('administrator', $subject->getUsername());
+        self::assertSame('administrator', $subject->getUsername());
     }
 
     /**
@@ -26,6 +35,6 @@ class ExtensionConfigurationTest extends UnitTestCase
             'username' => 'admin',
         ]);
 
-        $this->assertSame('admin', $subject->getUsername());
+        self::assertSame('admin', $subject->getUsername());
     }
 }

@@ -1,5 +1,14 @@
 <?php
+
 declare(strict_types=1);
+
+/*
+ * This file is part of the "be_static_auth" Extension for TYPO3 CMS.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
+ */
+
 namespace Codemonkey1988\BeStaticAuth\UserProvider;
 
 use Hackzilla\PasswordGenerator\Generator\ComputerPasswordGenerator;
@@ -31,7 +40,6 @@ class BackendUserProvider implements UserProviderInterface
      * The newly created user will be disabled so it can not used for default login purpose.
      *
      * @param string $username
-     * @return void
      */
     public function createAdminUser(string $username)
     {
@@ -90,7 +98,6 @@ class BackendUserProvider implements UserProviderInterface
 
     /**
      * @param array $userRecord
-     * @return void
      */
     public function restoreUser(array $userRecord)
     {
