@@ -15,8 +15,6 @@ use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Exception;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Saltedpasswords\Salt\SaltFactory;
-use TYPO3\CMS\Saltedpasswords\Utility\SaltedPasswordsUtility;
 
 class BackendUserProvider implements UserProviderInterface
 {
@@ -140,13 +138,6 @@ class BackendUserProvider implements UserProviderInterface
      */
     protected function hashPassword(string $plainPassword)
     {
-        // Make usage of deprecated salted password extension.
-        if (class_exists(SaltedPasswordsUtility::class)) {
-            $objInstanceSaltedPW = SaltFactory::getSaltingInstance();
-
-            return $objInstanceSaltedPW->getHashedPassword($plainPassword);
-        }
-
         $hashStrategy = GeneralUtility::makeInstance(PasswordHashFactory::class)
             ->getDefaultHashInstance('BE');
 
