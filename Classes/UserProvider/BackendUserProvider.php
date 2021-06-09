@@ -11,9 +11,9 @@ declare(strict_types=1);
 
 namespace Codemonkey1988\BeStaticAuth\UserProvider;
 
-use Hackzilla\PasswordGenerator\Generator\ComputerPasswordGenerator;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
 use TYPO3\CMS\Core\Database\ConnectionPool;
+use TYPO3\CMS\Core\Exception;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Saltedpasswords\Salt\SaltFactory;
 use TYPO3\CMS\Saltedpasswords\Utility\SaltedPasswordsUtility;
@@ -118,15 +118,20 @@ class BackendUserProvider implements UserProviderInterface
      */
     protected function generatePassword()
     {
-        $generator = new ComputerPasswordGenerator();
-        $generator
-            ->setUppercase()
-            ->setLowercase()
-            ->setNumbers()
-            ->setSymbols()
-            ->setLength(64);
+        $triesLeft = 5;
+        $generatedPassword = '';
+        while ($triesLeft > 0 && strlen($generatedPassword) === 0) {
+            try {
+                $generatedPassword = bin2hex(random_bytes(60));
+            } catch (\Exception $e) {
+            }
+        }
 
-        return $this->hashPassword($generator->generatePassword());
+        if (strlen($generatedPassword) === 0) {
+            throw new Exception('Could not generate random password.', 1622839550);
+        }
+
+        return $this->hashPassword($generatedPassword);
     }
 
     /**
