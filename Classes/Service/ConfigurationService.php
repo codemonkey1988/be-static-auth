@@ -41,13 +41,7 @@ class ConfigurationService implements SingletonInterface
 
     protected function loadConfiguration()
     {
-        $extensionConfigurationClassExists = class_exists(\TYPO3\CMS\Core\Configuration\ExtensionConfiguration::class);
-
-        if ($extensionConfigurationClassExists) {
-            $extensionConfiguration = GeneralUtility::makeInstance(\TYPO3\CMS\Core\Configuration\ExtensionConfiguration::class)->get('be_static_auth');
-        } else {
-            $extensionConfiguration = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['be_static_auth'] ?? '');
-        }
+        $extensionConfiguration = GeneralUtility::makeInstance(\TYPO3\CMS\Core\Configuration\ExtensionConfiguration::class)->get('be_static_auth');
 
         if (!is_array($extensionConfiguration)) {
             $extensionConfiguration = [];

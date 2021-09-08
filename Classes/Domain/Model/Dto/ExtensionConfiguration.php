@@ -25,7 +25,7 @@ class ExtensionConfiguration
 
     public function __construct(array $configuration)
     {
-        $this->username = (string)$configuration['username'] ?: self::DEFAULT_USERNAME;
+        $this->username = (string)$configuration['username'] ?? self::DEFAULT_USERNAME;
     }
 
     /**

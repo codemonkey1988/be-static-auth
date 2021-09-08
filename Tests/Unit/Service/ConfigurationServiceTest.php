@@ -35,7 +35,6 @@ class ConfigurationServiceTest extends UnitTestCase
         $testConfiguration = [
             'username' => 'admin',
         ];
-        $GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']['be_static_auth'] = serialize($testConfiguration);
         $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['be_static_auth'] = $testConfiguration;
 
         $subject = new ConfigurationService();
