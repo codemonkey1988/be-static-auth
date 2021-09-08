@@ -7,7 +7,7 @@
  * LICENSE file that was distributed with this source code.
  */
 
-$EM_CONF[$_EXTKEY] = [
+$EM_CONF['be_google_auth'] = [
     'title' => 'Static Backend Login Provider',
     'description' => 'Adds a button to backend login that automatically creates an admin user and log in using it.',
     'category' => 'services',
@@ -15,10 +15,10 @@ $EM_CONF[$_EXTKEY] = [
     'author_email' => 'schreiner.tim@gmail.com',
     'state' => 'beta',
     'clearCacheOnLoad' => true,
-    'version' => '2.0.1',
+    'version' => '3.0.0-dev',
     'constraints' => [
         'depends' => [
-            'typo3' => '9.5.0-10.4.99',
+            'typo3' => '10.4.0-11.5.99',
         ],
         'conflicts' => [],
         'suggests' => [],

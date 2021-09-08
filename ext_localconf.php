@@ -9,7 +9,7 @@
 
 defined('TYPO3_MODE') || die();
 
-if (\TYPO3\CMS\Core\Utility\GeneralUtility::getApplicationContext()->isDevelopment()) {
+if (\TYPO3\CMS\Core\Core\Environment::getContext()->isDevelopment()) {
     $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['backend']['loginProviders']['static_auth'] = [
         'provider' => \Codemonkey1988\BeStaticAuth\LoginProvider\StaticAdminProvider::class,
         'sorting' => 30,
