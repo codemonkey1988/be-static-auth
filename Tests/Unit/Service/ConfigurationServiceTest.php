@@ -13,7 +13,7 @@ namespace Codemonkey1988\BeStaticAuth\Tests\Unit\Service;
 
 use Codemonkey1988\BeStaticAuth\Domain\Model\Dto\ExtensionConfiguration;
 use Codemonkey1988\BeStaticAuth\Service\ConfigurationService;
-use Nimut\TestingFramework\TestCase\UnitTestCase;
+use TYPO3\TestingFramework\Core\Unit\UnitTestCase;
 
 class ConfigurationServiceTest extends UnitTestCase
 {
