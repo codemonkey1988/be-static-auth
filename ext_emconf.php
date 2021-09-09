@@ -7,7 +7,7 @@
  * LICENSE file that was distributed with this source code.
  */
 
-$EM_CONF['be_google_auth'] = [
+$EM_CONF['be_static_auth'] = [
     'title' => 'Static Backend Login Provider',
     'description' => 'Adds a button to backend login that automatically creates an admin user and log in using it.',
     'category' => 'services',

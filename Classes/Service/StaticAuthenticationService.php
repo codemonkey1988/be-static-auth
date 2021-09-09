@@ -11,47 +11,54 @@ declare(strict_types=1);
 
 namespace Codemonkey1988\BeStaticAuth\Service;
 
-use Codemonkey1988\BeStaticAuth\Domain\Model\Dto\ExtensionConfiguration;
 use Codemonkey1988\BeStaticAuth\UserProvider\BackendUserProvider;
 use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
+use TYPO3\CMS\Core\Configuration\Exception\ExtensionConfigurationExtensionNotConfiguredException;
+use TYPO3\CMS\Core\Configuration\Exception\ExtensionConfigurationPathDoesNotExistException;
+use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
+use TYPO3\CMS\Core\Exception;
 use TYPO3\CMS\Core\Service\AbstractService;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
 
-/**
- * Class StaticAuthenticationService
- */
 class StaticAuthenticationService extends AbstractService
 {
-    /**
-     * @var array
-     */
-    protected $loginData;
+    const DEFAULT_USERNAME = 'administrator';
+
+    protected array $loginData;
+
+    protected ExtensionConfiguration $extensionConfiguration;
+
+    protected BackendUserProvider $backendUserProvider;
 
     /**
-     * @var array
+     * @required
      */
-    protected $authenticationInformation = [];
+    public function setExtensionConfiguration(ExtensionConfiguration $extensionConfiguration): void
+    {
+        $this->extensionConfiguration = $extensionConfiguration;
+    }
 
     /**
-     * @var ExtensionConfiguration
+     * @required
      */
-    protected $extensionConfiguration;
+    public function setBackendUserProvider(BackendUserProvider $backendUserProvider): void
+    {
+        $this->backendUserProvider = $backendUserProvider;
+    }
 
     /**
-     * Initializes authentication for this service.
-     *
-     * @param string $subType : Subtype for authentication (either "getUserFE" or "getUserBE")
-     * @param array $loginData : Login data submitted by user and preprocessed by AbstractUserAuthentication
-     * @param array $authenticationInformation : Additional TYPO3 information for authentication services (unused here)
+     * @param string $subType Subtype for authentication (either "getUserFE" or "getUserBE")
+     * @param array $loginData Login data submitted by user and preprocessed by AbstractUserAuthentication
+     * @param array $authenticationInformation Additional TYPO3 information for authentication services (unused here)
      * @param AbstractUserAuthentication $parentObject Calling object
      */
-    public function initAuth($subType, array $loginData, array $authenticationInformation, AbstractUserAuthentication $parentObject)
-    {
-        // Store login and authentication data
+    public function initAuth(
+        string $subType,
+        array $loginData,
+        array $authenticationInformation,
+        AbstractUserAuthentication $parentObject
+    ) {
         $this->loginData = $loginData;
-        $this->authenticationInformation = $authenticationInformation;
-        $this->extensionConfiguration = GeneralUtility::makeInstance(ConfigurationService::class)
-            ->getConfiguration();
+        $this->backendUserProvider->setAuthenticationInformation($authenticationInformation);
     }
 
     /**
@@ -64,35 +71,31 @@ class StaticAuthenticationService extends AbstractService
      */
     public function getUser()
     {
-        if ($this->loginData['status'] !== 'login' || $this->authenticationInformation['loginType'] !== 'BE') {
+        if ($this->loginData['status'] !== 'login'
+            || $this->backendUserProvider->getAuthenticationInformation()['loginType'] !== 'BE') {
             return false;
         }
 
         $username = $this->getConfiguredUsername();
-        $userProvider = GeneralUtility::makeInstance(BackendUserProvider::class, $this->authenticationInformation);
-        $userRecord = $userProvider->getUserByUsername($username);
+        $userRecord = $this->backendUserProvider->getUserByUsername($username);
 
-        if (empty($userRecord)) {
-            $userRecordWithoutRestrictions = $userProvider->getUserByUsername($username, false);
-
-            if (empty($userRecordWithoutRestrictions)) {
-                $userProvider->createAdminUser($username);
-                $userRecord = $this->getUser();
-            } else {
-                $userProvider->restoreUser($userRecordWithoutRestrictions);
-                $userRecord = $this->getUser();
+        if ($userRecord === []) {
+            $userRecordWithoutRestrictions = $this->backendUserProvider->getUserByUsername($username, false);
+            try {
+                if ($userRecordWithoutRestrictions === []) {
+                    $this->backendUserProvider->createAdminUser($username);
+                } else {
+                    $this->backendUserProvider->restoreUser($userRecordWithoutRestrictions);
+                }
+            } catch (Exception $e) {
+                return false;
             }
+            $userRecord = $this->getUser();
         }
 
         return $userRecord;
     }
 
-    /**
-     * Authenticates user
-     *
-     * @param array $userRecord User record
-     * @return int Code that shows if user is really authenticated.
-     */
     public function authUser(array $userRecord): int
     {
         $result = 100;
@@ -104,11 +107,13 @@ class StaticAuthenticationService extends AbstractService
         return $result;
     }
 
-    /**
-     * @return string
-     */
     protected function getConfiguredUsername(): string
     {
-        return  $this->extensionConfiguration->getUsername();
+        try {
+            $username = $this->extensionConfiguration->get('be_static_auth', 'username');
+        } catch (ExtensionConfigurationExtensionNotConfiguredException | ExtensionConfigurationPathDoesNotExistException $e) {
+            $username = self::DEFAULT_USERNAME;
+        }
+        return $username ?: self::DEFAULT_USERNAME;
     }
 }

@@ -7,8 +7,6 @@
  * LICENSE file that was distributed with this source code.
  */
 
-defined('TYPO3_MODE') || die();
-
 if (\TYPO3\CMS\Core\Core\Environment::getContext()->isDevelopment()) {
     $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['backend']['loginProviders']['static_auth'] = [
         'provider' => \Codemonkey1988\BeStaticAuth\LoginProvider\StaticAdminProvider::class,
