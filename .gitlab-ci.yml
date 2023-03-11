@@ -40,13 +40,19 @@ lint-php:
       - PHP_VERSION: [ '7.4', '8.0' ]
 
 codestyle-php:
-  extends: .composer-install
   stage: lint
-  image: registry.gitlab.com/codemonkey1988/docker-composer-image:2-php7.4
   except:
     - master
+  image: registry.gitlab.com/codemonkey1988/docker-composer-image:2-php7.4
+  before_script:
+    - mkdir -p .composer/cache
+    - COMPOSER_CACHE_DIR=.composer/cache composer install
   script:
-    - .Build/bin/php-cs-fixer fix --config=.php-cs-fixer.dist.php -v --dry-run --using-cache=no --diff
+    - composer phpcsfixer
+  cache:
+    key: composer-cache
+    paths:
+      - .composer/cache
 
 unit-tests:
   extends:
