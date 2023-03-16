@@ -54,6 +54,30 @@ codestyle-php:
     paths:
       - .composer/cache
 
+php:phpstan:
+  stage: lint
+  except:
+    - master
+  image: registry.gitlab.com/codemonkey1988/docker-composer-image:2-php$PHP_VERSION
+  before_script:
+    - mkdir -p .composer/cache
+    # Remove typo3-console because it is not needed here and currently not compatible with v12.
+    - COMPOSER_CACHE_DIR=.composer/cache composer remove --dev --no-update helhum/typo3-console && rm -f composer.lock
+    - COMPOSER_CACHE_DIR=.composer/cache composer require typo3/cms-core="$TYPO3_VERSION"
+    - echo '<?php return [];' > .Build/Web/typo3conf/LocalConfiguration.php
+  script:
+    - composer phpstan
+  cache:
+    key: composer-cache
+    paths:
+      - .composer/cache
+  parallel:
+    matrix:
+      - TYPO3_VERSION: '^11'
+        PHP_VERSION: [ '7.4', '8.0' ]
+      - TYPO3_VERSION: '^10'
+        PHP_VERSION: [ '7.4' ]
+
 unit-tests:
   extends:
     - .composer-install

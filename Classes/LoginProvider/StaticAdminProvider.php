@@ -19,7 +19,7 @@ use TYPO3\CMS\Fluid\View\StandaloneView;
 
 class StaticAdminProvider implements LoginProviderInterface
 {
-    public function render(StandaloneView $view, PageRenderer $pageRenderer, LoginController $loginController)
+    public function render(StandaloneView $view, PageRenderer $pageRenderer, LoginController $loginController): void
     {
         $view->setTemplatePathAndFilename(GeneralUtility::getFileAbsFileName('EXT:be_static_auth/Resources/Private/Templates/Backend.html'));
     }

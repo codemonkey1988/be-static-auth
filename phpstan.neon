@@ -1,0 +1,13 @@
+parameters:
+  level: 8
+  paths:
+    - Classes
+    - Configuration
+    - ext_emconf.php
+  excludePaths:
+    - Tests/Functional/ViewHelpers/ViewHelperTestCase.php
+    # Can be removed when v11 support is dropped.
+    - Tests/Functional/Variant/VariantFactoryTest.php
+
+includes:
+	- .Build/vendor/saschaegerer/phpstan-typo3/extension.neon
