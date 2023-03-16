@@ -11,20 +11,34 @@ declare(strict_types=1);
 
 namespace Codemonkey1988\BeStaticAuth\UserProvider;
 
+use Codemonkey1988\BeStaticAuth\Service\StaticAuthenticationService;
+use Doctrine\DBAL\Result;
 use TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Exception;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
+/**
+ * @phpstan-import-type AuthenticationInformation from StaticAuthenticationService
+ */
 class BackendUserProvider implements UserProviderInterface
 {
+    /**
+     * @var AuthenticationInformation
+     */
     protected array $authenticationInformation;
 
-    public function setAuthenticationInformation(array $authenticationInformation)
+    /**
+     * @param AuthenticationInformation $authenticationInformation
+     */
+    public function setAuthenticationInformation(array $authenticationInformation): void
     {
         $this->authenticationInformation = $authenticationInformation;
     }
 
+    /**
+     * @return AuthenticationInformation
+     */
     public function getAuthenticationInformation(): array
     {
         return $this->authenticationInformation;
@@ -33,8 +47,6 @@ class BackendUserProvider implements UserProviderInterface
     /**
      * Creates a new admin user.
      * The newly created user will be disabled so it can not used for default login purpose.
-     *
-     * @throws Exception
      */
     public function createAdminUser(string $username): void
     {
@@ -52,7 +64,10 @@ class BackendUserProvider implements UserProviderInterface
             ->insert('be_users', $data);
     }
 
-    public function getUserByUsername(string $username, $respectEnableFields = true): array
+    /**
+     * @return array<string, mixed>
+     */
+    public function getUserByUsername(string $username, bool $respectEnableFields = true): array
     {
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable($this->authenticationInformation['db_user']['table']);
@@ -65,16 +80,22 @@ class BackendUserProvider implements UserProviderInterface
             ),
         ];
 
-        if ($respectEnableFields) {
+        if ($respectEnableFields && !empty($this->authenticationInformation['db_user']['enable_clause'])) {
             $conditions[] = $this->authenticationInformation['db_user']['enable_clause'];
         }
 
-        $records = $queryBuilder
+        /** @var Result $result */
+        $result = $queryBuilder
             ->select('*')
             ->from($this->authenticationInformation['db_user']['table'])
             ->where(...$conditions)
-            ->execute()
-            ->fetchAll();
+            ->execute();
+        if (method_exists($result, 'fetchAllAssociative')) {
+            $records = $result->fetchAllAssociative();
+        } else {
+            /** @phpstan-ignore-next-line */
+            $records = $result->fetchAll();
+        }
 
         $count = count($records);
         if ($count > 1) {
@@ -88,16 +109,16 @@ class BackendUserProvider implements UserProviderInterface
     }
 
     /**
-     * @throws Exception
+     * @param array<string, mixed> $userRecord
      */
     public function restoreUser(array $userRecord): void
     {
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)
             ->getQueryBuilderForTable($this->authenticationInformation['db_user']['table']);
         $queryBuilder->update($this->authenticationInformation['db_user']['table'])
-            ->set('deleted', 0)
-            ->set('disable', 0)
-            ->set('admin', 1)
+            ->set('deleted', '0')
+            ->set('disable', '0')
+            ->set('admin', '1')
             ->set('usergroup', '')
             ->set('password', $this->generateRandomPassword())
             ->execute();
@@ -111,6 +132,7 @@ class BackendUserProvider implements UserProviderInterface
             try {
                 $generatedPassword = bin2hex(random_bytes(60));
             } catch (\Exception $e) {
+                $triesLeft--;
             }
         }
 

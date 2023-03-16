@@ -1,0 +1,10 @@
+parameters:
+  level: 8
+  paths:
+    - Classes
+    - Configuration
+    - Tests
+    - ext_emconf.php
+
+includes:
+	- .Build/vendor/saschaegerer/phpstan-typo3/extension.neon

@@ -19,10 +19,16 @@ use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
 use TYPO3\CMS\Core\Exception;
 use TYPO3\CMS\Core\Service\AbstractService;
 
+/**
+ * @phpstan-type AuthenticationInformation array<string, mixed>
+ */
 class StaticAuthenticationService extends AbstractService
 {
     const DEFAULT_USERNAME = 'administrator';
 
+    /**
+     * @var array{status: string|null, uname: string|null, ident: string|null}
+     */
     protected array $loginData;
 
     protected ExtensionConfiguration $extensionConfiguration;
@@ -47,8 +53,8 @@ class StaticAuthenticationService extends AbstractService
 
     /**
      * @param string $subType Subtype for authentication (either "getUserFE" or "getUserBE")
-     * @param array $loginData Login data submitted by user and preprocessed by AbstractUserAuthentication
-     * @param array $authenticationInformation Additional TYPO3 information for authentication services (unused here)
+     * @param array{status: string|null, uname: string|null, ident: string|null} $loginData Login data submitted by user and preprocessed by AbstractUserAuthentication
+     * @param array<string, mixed> $authenticationInformation Additional TYPO3 information for authentication services (unused here)
      * @param AbstractUserAuthentication $parentObject Calling object
      */
     public function initAuth(
@@ -56,7 +62,7 @@ class StaticAuthenticationService extends AbstractService
         array $loginData,
         array $authenticationInformation,
         AbstractUserAuthentication $parentObject
-    ) {
+    ): void {
         $this->loginData = $loginData;
         $this->backendUserProvider->setAuthenticationInformation($authenticationInformation);
     }
@@ -67,13 +73,13 @@ class StaticAuthenticationService extends AbstractService
      * function makes sure that user cannot be authenticated by any other service
      * if user tries to use OpenID to authenticate.
      *
-     * @return mixed User record (content of fe_users/be_users as appropriate for the current mode)
+     * @return array<string, mixed>|null User record (content of fe_users/be_users as appropriate for the current mode)
      */
-    public function getUser()
+    public function getUser(): ?array
     {
         if ($this->loginData['status'] !== 'login'
             || $this->backendUserProvider->getAuthenticationInformation()['loginType'] !== 'BE') {
-            return false;
+            return null;
         }
 
         $username = $this->getConfiguredUsername();
@@ -88,19 +94,22 @@ class StaticAuthenticationService extends AbstractService
                     $this->backendUserProvider->restoreUser($userRecordWithoutRestrictions);
                 }
             } catch (Exception $e) {
-                return false;
+                return null;
             }
             $userRecord = $this->getUser();
         }
 
-        return $userRecord;
+        return is_array($userRecord) ? $userRecord : null;
     }
 
+    /**
+     * @param array{username?: string} $userRecord
+     */
     public function authUser(array $userRecord): int
     {
         $result = 100;
 
-        if ($this->getConfiguredUsername() === $userRecord['username']) {
+        if (isset($userRecord['username']) && $this->getConfiguredUsername() === $userRecord['username']) {
             $result = 200;
         }
 

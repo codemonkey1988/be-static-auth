@@ -37,33 +37,99 @@ lint-php:
     - find . -name \*.php ! -path "./.Build/*" -exec php -d display_errors=stderr -l {} > /dev/null \;
   parallel:
     matrix:
-      - PHP_VERSION: [ '7.4', '8.0' ]
+      - PHP_VERSION: [ '7.4', '8.0', '8.1', '8.2' ]
 
 codestyle-php:
-  extends: .composer-install
   stage: lint
+  except:
+    - master
   image: registry.gitlab.com/codemonkey1988/docker-composer-image:2-php7.4
-  except:
-    - master
+  before_script:
+    - mkdir -p .composer/cache
+    - COMPOSER_CACHE_DIR=.composer/cache composer install
   script:
-    - .Build/bin/php-cs-fixer fix --config=.php-cs-fixer.dist.php -v --dry-run --using-cache=no --diff
+    - composer phpcsfixer
+  cache:
+    key: composer-cache
+    paths:
+      - .composer/cache
 
-unit-tests:
-  extends:
-    - .composer-install
-    - .install-typo3
-  stage: test
-  image: registry.gitlab.com/codemonkey1988/docker-composer-image:2-php$PHP_VERSION
+php:phpstan:
+  stage: lint
   except:
     - master
+  image: registry.gitlab.com/codemonkey1988/docker-composer-image:2-php$PHP_VERSION
+  before_script:
+    - mkdir -p .composer/cache
+    # Remove typo3-console because it is not needed here and currently not compatible with v12.
+    - COMPOSER_CACHE_DIR=.composer/cache composer remove --dev --no-update helhum/typo3-console && rm -f composer.lock
+    - COMPOSER_CACHE_DIR=.composer/cache composer require typo3/cms-core="$TYPO3_VERSION"
+    - echo '<?php return [];' > .Build/Web/typo3conf/LocalConfiguration.php
   script:
-    - .Build/bin/phpunit --colors -c .Build/vendor/typo3/testing-framework/Resources/Core/Build/UnitTests.xml Tests/Unit/
+    - composer phpstan
+  cache:
+    key: composer-cache
+    paths:
+      - .composer/cache
   parallel:
     matrix:
-      - TYPO3_VERSION: '^11.4'
-        PHP_VERSION: [ '7.4', '8.0' ]
+      - TYPO3_VERSION: '^11'
+        PHP_VERSION: [ '7.4', '8.0', '8.1', '8.2' ]
+      - TYPO3_VERSION: '^10'
+        PHP_VERSION: [ '7.4' ]
+
+functional-tests:
+  stage: test
+  except:
+    - master
+  image: registry.gitlab.com/codemonkey1988/docker-composer-image:2-php$PHP_VERSION
+  services:
+    - mysql:8.0
+  variables:
+    MYSQL_ROOT_PASSWORD: root
+    typo3DatabaseHost: mysql
+    typo3DatabaseUsername: root
+    typo3DatabasePassword: $MYSQL_ROOT_PASSWORD
+    typo3DatabaseName: typo3_test
+    typo3DatabaseDriver: mysqli
+  before_script:
+    - docker-php-ext-install mysqli
+    - docker-php-ext-enable xdebug
+    - echo -e "xdebug.mode=coverage" > /usr/local/etc/php/conf.d/xdebug_coverage.ini
+    - mkdir -p .composer/cache
+    # Remove typo3-console because it is not needed here and currently not compatible with v12.
+    - COMPOSER_CACHE_DIR=.composer/cache composer remove --dev --no-update helhum/typo3-console && rm -f composer.lock
+    - COMPOSER_CACHE_DIR=.composer/cache composer require typo3/cms-core="$TYPO3_VERSION"
+    - echo '<?php return [];' > .Build/Web/typo3conf/LocalConfiguration.php
+  script:
+    - |
+      .Build/bin/phpunit \
+        -c FunctionalTests.xml \
+        --colors \
+        --testdox \
+        --coverage-html build/reports/coverage-functional-html/ \
+        --coverage-cobertura build/reports/cobertura-functional.xml \
+        --coverage-clover build/reports/clover-functional.xml
+  parallel:
+    matrix:
+      - TYPO3_VERSION: '^11.5'
+        PHP_VERSION: [ '7.4', '8.0', '8.1', '8.2' ]
       - TYPO3_VERSION: '^10.4'
         PHP_VERSION: [ '7.4' ]
+  cache:
+    key: composer-cache
+    paths:
+      - .composer/cache
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - build/reports/
+    when: always
+    reports:
+      junit: build/reports/phpunit-functional.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: build/reports/cobertura-functional.xml
 
 mirror:
   stage: mirror

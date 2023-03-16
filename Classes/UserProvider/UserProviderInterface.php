@@ -13,16 +13,20 @@ interface UserProviderInterface
 {
     /**
      * Get a user by its username.
+     *
+     * @return array<string, mixed>
      */
-    public function getUserByUsername(string $username, $respectEnableFields = true): array;
+    public function getUserByUsername(string $username, bool $respectEnableFields = true): array;
 
     /**
      * Creates a new admin user with.
      */
-    public function createAdminUser(string $username);
+    public function createAdminUser(string $username): void;
 
     /**
      * Sets the deleted flag to 0 for the given user record uid.
+     *
+     * @param array<string, mixed> $userRecord
      */
-    public function restoreUser(array $userRecord);
+    public function restoreUser(array $userRecord): void;
 }

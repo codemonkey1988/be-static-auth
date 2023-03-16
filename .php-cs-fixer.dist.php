@@ -9,7 +9,7 @@ EOF;
 $config = new PhpCsFixer\Config();
 $config->setRiskyAllowed(true);
 $config->getFinder()->in(__DIR__);
-$config->getFinder()->exclude(['.Build', 'var', 'config']);
+$config->getFinder()->exclude(['.Build', 'var']);
 $config->setRules([
     '@DoctrineAnnotation' => true,
     '@PSR2' => true,
@@ -22,6 +22,12 @@ $config->setRules([
     'declare_equal_normalize' => ['space' => 'none'],
     'dir_constant' => true,
     'function_typehint_space' => true,
+    'header_comment' => [
+        'header' => $headerTemplate,
+        'comment_type' => 'comment',
+        'location' => 'after_declare_strict',
+        'separate' => 'both',
+    ],
     'lowercase_cast' => true,
     'method_argument_space' => ['on_multiline' => 'ensure_fully_multiline'],
     'modernize_types_casting' => true,
