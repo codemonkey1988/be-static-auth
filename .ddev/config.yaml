@@ -17,6 +17,7 @@ use_dns_when_possible: true
 composer_version: "2"
 nodejs_version: "16"
 web_environment:
+    - TYPO3_CONTEXT=Development
     # Functional Testing
     - typo3DatabaseName=functional
     - typo3DatabaseHost=db
