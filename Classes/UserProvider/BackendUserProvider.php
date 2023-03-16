@@ -80,7 +80,7 @@ class BackendUserProvider implements UserProviderInterface
             ),
         ];
 
-        if ($respectEnableFields) {
+        if ($respectEnableFields && !empty($this->authenticationInformation['db_user']['enable_clause'])) {
             $conditions[] = $this->authenticationInformation['db_user']['enable_clause'];
         }
 
@@ -91,7 +91,7 @@ class BackendUserProvider implements UserProviderInterface
             ->where(...$conditions)
             ->execute();
         if (method_exists($result, 'fetchAllAssociative')) {
-            $records = $result->fetchAssociative();
+            $records = $result->fetchAllAssociative();
         } else {
             /** @phpstan-ignore-next-line */
             $records = $result->fetchAll();
