@@ -19,12 +19,14 @@
   ],
   "require": {
     "php": "^7.4 || ^8.0",
-    "typo3/cms-core": "^11.5"
+    "typo3/cms-core": "^11.5 || ~12.2.0"
   },
   "require-dev": {
     "friendsofphp/php-cs-fixer": "^3.11",
     "typo3/testing-framework": "^6.16.6 || 7.x-dev",
     "phpstan/phpstan": "^1.10",
+    "saschaegerer/phpstan-typo3": "^1.8",
+    "sbuerk/typo3-cmscomposerinstallers-testingframework-bridge": "^0.1.2"
   },
   "autoload": {
     "psr-4": {
@@ -44,11 +46,14 @@
     "bin-dir": ".Build/bin",
     "allow-plugins": {
       "typo3/class-alias-loader": true,
+      "typo3/cms-composer-installers": true,
+      "sbuerk/typo3-cmscomposerinstallers-testingframework-bridge": true
     }
   },
   "scripts": {
     "phpcsfixer": "PHP_CS_FIXER_IGNORE_ENV=1 php-cs-fixer fix --config=.php-cs-fixer.dist.php -v --dry-run --using-cache=no --diff",
     "phpstan": "phpstan analyse --ansi --no-progress --memory-limit=1024M --configuration=phpstan.neon",
+    "phpunit": "phpunit --color -c UnitTests.xml",
     "phpunit-functional": "phpunit --color -c FunctionalTests.xml",
     "post-autoload-dump": [
       "mkdir -p .Build/Web/typo3conf/ext/",

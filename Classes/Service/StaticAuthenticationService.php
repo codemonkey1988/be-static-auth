@@ -11,95 +11,83 @@ declare(strict_types=1);
 
 namespace Codemonkey1988\BeStaticAuth\Service;
 
+use Codemonkey1988\BeStaticAuth\Configuration;
+use Codemonkey1988\BeStaticAuth\UserProvider\BackendUserFactory;
 use Codemonkey1988\BeStaticAuth\UserProvider\BackendUserProvider;
-use TYPO3\CMS\Core\Authentication\AbstractUserAuthentication;
-use TYPO3\CMS\Core\Configuration\Exception\ExtensionConfigurationExtensionNotConfiguredException;
-use TYPO3\CMS\Core\Configuration\Exception\ExtensionConfigurationPathDoesNotExistException;
-use TYPO3\CMS\Core\Configuration\ExtensionConfiguration;
-use TYPO3\CMS\Core\Exception;
-use TYPO3\CMS\Core\Service\AbstractService;
+use Codemonkey1988\BeStaticAuth\UserProvider\UserNotFoundException;
+use TYPO3\CMS\Core\Authentication\AbstractAuthenticationService;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
- * @phpstan-type AuthenticationInformation array<string, mixed>
+ * @phpstan-type AuthenticationInformation array{
+ *     loginType: string,
+ *     db_user: array{
+ *         table: string
+ *     }
+ * }
  */
-class StaticAuthenticationService extends AbstractService
+final class StaticAuthenticationService extends AbstractAuthenticationService
 {
-    const DEFAULT_USERNAME = 'administrator';
+    private Configuration $configuration;
 
-    /**
-     * @var array{status: string|null, uname: string|null, ident: string|null}
-     */
-    protected array $loginData;
+    private BackendUserProvider $backendUserProvider;
 
-    protected ExtensionConfiguration $extensionConfiguration;
-
-    protected BackendUserProvider $backendUserProvider;
-
-    /**
-     * @required
-     */
-    public function setExtensionConfiguration(ExtensionConfiguration $extensionConfiguration): void
+    public function __construct(Configuration $configuration, BackendUserProvider $backendUserProvider)
     {
-        $this->extensionConfiguration = $extensionConfiguration;
-    }
-
-    /**
-     * @required
-     */
-    public function setBackendUserProvider(BackendUserProvider $backendUserProvider): void
-    {
+        $this->configuration = $configuration;
         $this->backendUserProvider = $backendUserProvider;
     }
 
     /**
-     * @param string $subType Subtype for authentication (either "getUserFE" or "getUserBE")
-     * @param array{status: string|null, uname: string|null, ident: string|null} $loginData Login data submitted by user and preprocessed by AbstractUserAuthentication
-     * @param array<string, mixed> $authenticationInformation Additional TYPO3 information for authentication services (unused here)
-     * @param AbstractUserAuthentication $parentObject Calling object
+     * @param array{status: string} $loginData
+     * @param AuthenticationInformation $authInfo
      */
-    public function initAuth(
-        string $subType,
-        array $loginData,
-        array $authenticationInformation,
-        AbstractUserAuthentication $parentObject
-    ): void {
-        $this->loginData = $loginData;
-        $this->backendUserProvider->setAuthenticationInformation($authenticationInformation);
+    public function initAuth($mode, $loginData, $authInfo, $pObj): void
+    {
+        parent::initAuth($mode, $loginData, $authInfo, $pObj);
+        if (!empty($authInfo['db_user']['table'])) {
+            $this->backendUserProvider->setTableName($authInfo['db_user']['table']);
+        }
     }
 
     /**
-     * This function returns the user record back to the AbstractUserAuthentication.
-     * It does not mean that user is authenticated, it means only that user is found. This
-     * function makes sure that user cannot be authenticated by any other service
-     * if user tries to use OpenID to authenticate.
-     *
-     * @return array<string, mixed>|null User record (content of fe_users/be_users as appropriate for the current mode)
+     * @return array{username: string}|null
      */
     public function getUser(): ?array
     {
-        if ($this->loginData['status'] !== 'login'
-            || $this->backendUserProvider->getAuthenticationInformation()['loginType'] !== 'BE') {
+        if ($this->login['status'] !== 'login' || $this->authInfo['loginType'] !== 'BE') {
             return null;
         }
 
-        $username = $this->getConfiguredUsername();
-        $userRecord = $this->backendUserProvider->getUserByUsername($username);
-
-        if ($userRecord === []) {
-            $userRecordWithoutRestrictions = $this->backendUserProvider->getUserByUsername($username, false);
+        $username = $this->configuration->getUsername();
+        $enableClause = $this->authInfo['db_user']['enable_clause'] ?? null;
+        try {
+            // Try to get an active user.
+            $userRecord = $this->backendUserProvider->getUserByUsernameWithoutRestrictions($username, $enableClause);
+        } catch (UserNotFoundException $e) {
             try {
-                if ($userRecordWithoutRestrictions === []) {
-                    $this->backendUserProvider->createAdminUser($username);
-                } else {
-                    $this->backendUserProvider->restoreUser($userRecordWithoutRestrictions);
+                // Check if there is a disabled or deleted user with the given username.
+                $this->backendUserProvider->getUserByUsernameWithoutRestrictions($username);
+                if ($this->logger !== null) {
+                    $this->logger->warning(sprintf(
+                        'Tried to login with username "%s" using static authentication provider. User is disabled or deleted.',
+                        $username
+                    ));
                 }
-            } catch (Exception $e) {
+                return null;
+            } catch (UserNotFoundException $e) {
+                try {
+                    // Try to create a new user record, if no user with given username exists.
+                    $userRecord = GeneralUtility::makeInstance(BackendUserFactory::class)->createAdminUserWithRandomPassword($username);
+                } catch (UserNotFoundException $e) {
+                    return null;
+                }
+            } catch (\Throwable $e) {
                 return null;
             }
-            $userRecord = $this->getUser();
         }
 
-        return is_array($userRecord) ? $userRecord : null;
+        return $userRecord;
     }
 
     /**
@@ -109,20 +97,10 @@ class StaticAuthenticationService extends AbstractService
     {
         $result = 100;
 
-        if (isset($userRecord['username']) && $this->getConfiguredUsername() === $userRecord['username']) {
+        if (isset($userRecord['username']) && $this->configuration->getUsername() === $userRecord['username']) {
             $result = 200;
         }
 
         return $result;
-    }
-
-    protected function getConfiguredUsername(): string
-    {
-        try {
-            $username = $this->extensionConfiguration->get('be_static_auth', 'username');
-        } catch (ExtensionConfigurationExtensionNotConfiguredException | ExtensionConfigurationPathDoesNotExistException $e) {
-            $username = self::DEFAULT_USERNAME;
-        }
-        return $username ?: self::DEFAULT_USERNAME;
     }
 }

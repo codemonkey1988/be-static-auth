@@ -73,8 +73,54 @@ php:phpstan:
       - .composer/cache
   parallel:
     matrix:
-      - TYPO3_VERSION: '^11'
+      - TYPO3_VERSION: '~12.2.0'
+        PHP_VERSION: [ '8.1', '8.2' ]
+      - TYPO3_VERSION: '^11.5'
         PHP_VERSION: [ '7.4', '8.0', '8.1', '8.2' ]
+
+unit-tests:
+  stage: test
+  except:
+    - master
+  image: registry.gitlab.com/codemonkey1988/docker-composer-image:2-php$PHP_VERSION
+  variables:
+    TYPO3_VERSION: ^10.4
+    PHP_VERSION: "7.4"
+  before_script:
+    - docker-php-ext-enable xdebug
+    - echo -e "xdebug.mode=coverage" > /usr/local/etc/php/conf.d/xdebug_coverage.ini
+    - mkdir -p .composer/cache
+    - COMPOSER_CACHE_DIR=.composer/cache composer require typo3/cms-core="$TYPO3_VERSION "
+    - echo '<?php return [];' > .Build/Web/typo3conf/LocalConfiguration.php
+  script:
+    - |
+      .Build/bin/phpunit \
+        -c UnitTests.xml \
+        --colors \
+        --testdox \
+        --coverage-html build/reports/coverage-unit-html/ \
+        --coverage-cobertura build/reports/cobertura-unit.xml \
+        --coverage-clover build/reports/clover-unit.xml
+  parallel:
+    matrix:
+      - TYPO3_VERSION: '~12.2.0'
+        PHP_VERSION: [ '8.1', '8.2' ]
+      - TYPO3_VERSION: '^11.5'
+        PHP_VERSION: [ '7.4', '8.0', '8.1', '8.2' ]
+  cache:
+    key: composer-cache
+    paths:
+      - .composer/cache
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - build/reports/
+    when: always
+    reports:
+      junit: build/reports/phpunit-unit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: build/reports/cobertura-unit.xml
 
 functional-tests:
   stage: test
@@ -95,8 +141,6 @@ functional-tests:
     - docker-php-ext-enable xdebug
     - echo -e "xdebug.mode=coverage" > /usr/local/etc/php/conf.d/xdebug_coverage.ini
     - mkdir -p .composer/cache
-    # Remove typo3-console because it is not needed here and currently not compatible with v12.
-    - COMPOSER_CACHE_DIR=.composer/cache composer remove --dev --no-update helhum/typo3-console && rm -f composer.lock
     - COMPOSER_CACHE_DIR=.composer/cache composer require typo3/cms-core="$TYPO3_VERSION"
     - echo '<?php return [];' > .Build/Web/typo3conf/LocalConfiguration.php
   script:
@@ -110,6 +154,8 @@ functional-tests:
         --coverage-clover build/reports/clover-functional.xml
   parallel:
     matrix:
+      - TYPO3_VERSION: '~12.2.0'
+        PHP_VERSION: [ '8.1', '8.2' ]
       - TYPO3_VERSION: '^11.5'
         PHP_VERSION: [ '7.4', '8.0', '8.1', '8.2' ]
   cache:

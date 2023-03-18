@@ -19,6 +19,7 @@ use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
 /**
  * @covers \Codemonkey1988\BeStaticAuth\Service\StaticAuthenticationService
+ * @phpstan-import-type AuthenticationInformation from StaticAuthenticationService
  */
 final class StaticAuthenticationServiceTest extends FunctionalTestCase
 {
@@ -33,15 +34,17 @@ final class StaticAuthenticationServiceTest extends FunctionalTestCase
         parent::setUp();
 
         $backendUserAuthentication = $this->initBackendUserAuthentication();
+        /** @var AuthenticationInformation $authInfo */
+        $authInfo = $backendUserAuthentication->getAuthInfoArray();
         $this->subject = $this->get(StaticAuthenticationService::class);
         $this->subject->initAuth(
-            '',
+            'auth',
             [
                 'status' => 'login',
                 'uname' => null,
                 'ident' => null,
             ],
-            $backendUserAuthentication->getAuthInfoArray(),
+            $authInfo,
             $backendUserAuthentication
         );
     }
@@ -57,22 +60,6 @@ final class StaticAuthenticationServiceTest extends FunctionalTestCase
 
         self::assertIsArray($user);
         self::assertSame('administrator', $user['username']);
-        self::assertCount(1, $this->getAllRecords('be_users'));
-    }
-
-    /**
-     * @test
-     */
-    public function loginWithNonExistingUserAndGivenUsernameWillCreateAdminUserWithGivenUsername(): void
-    {
-        $GLOBALS['TYPO3_CONF_VARS']['EXTENSIONS']['be_static_auth']['username'] = 'testuser';
-
-        self::assertCount(0, $this->getAllRecords('be_users'));
-
-        $user = $this->subject->getUser();
-
-        self::assertIsArray($user);
-        self::assertSame('testuser', $user['username']);
         self::assertCount(1, $this->getAllRecords('be_users'));
     }
 
@@ -95,7 +82,7 @@ final class StaticAuthenticationServiceTest extends FunctionalTestCase
     /**
      * @test
      */
-    public function loginWithExistingButDisabledAdminUserWillEnableUser(): void
+    public function loginWithExistingButDisabledAdminUserFail(): void
     {
         $this->importCSVDataSet(__DIR__ . '/../Fixtures/DisabledBeUsers.csv');
 
@@ -103,17 +90,48 @@ final class StaticAuthenticationServiceTest extends FunctionalTestCase
 
         $user = $this->subject->getUser();
 
-        self::assertIsArray($user);
-        self::assertSame('administrator', $user['username']);
-        self::assertSame(0, $user['disable']);
-        self::assertCount(1, $this->getAllRecords('be_users'));
+        self::assertNull($user);
+    }
+
+    /**
+     * @test
+     */
+    public function authenticateUserWithConfiguredUsernameWillReturn200(): void
+    {
+        $user = [
+            'username' => 'administrator',
+        ];
+
+        self::assertSame(200, $this->subject->authUser($user));
+    }
+
+    /**
+     * @test
+     */
+    public function authenticateUserWithMissingUsernameWillReturn100(): void
+    {
+        $user = [];
+
+        self::assertSame(100, $this->subject->authUser($user));
+    }
+
+    /**
+     * @test
+     */
+    public function authenticateUserWithNonConfiguredUsernameWillReturn100(): void
+    {
+        $user = [
+            'username' => 'user-does-not-exist',
+        ];
+
+        self::assertSame(100, $this->subject->authUser($user));
     }
 
     private function initBackendUserAuthentication(): BackendUserAuthentication
     {
-        $GLOBALS['TYPO3_REQUEST'] = new ServerRequest('http://localhost', 'GET');
+        $request = new ServerRequest('http://localhost', 'GET');
         $backendUserAuthentication = GeneralUtility::makeInstance(BackendUserAuthentication::class);
-        $backendUserAuthentication->start();
+        $backendUserAuthentication->start($request);
 
         return $backendUserAuthentication;
     }

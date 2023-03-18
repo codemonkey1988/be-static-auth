@@ -9,6 +9,8 @@
 
 namespace Codemonkey1988\BeStaticAuth\UserProvider;
 
+use TYPO3\CMS\Core\Database\Query\Expression\CompositeExpression;
+
 interface UserProviderInterface
 {
     /**
@@ -16,17 +18,10 @@ interface UserProviderInterface
      *
      * @return array<string, mixed>
      */
-    public function getUserByUsername(string $username, bool $respectEnableFields = true): array;
+    public function getUserByUsernameWithoutRestrictions(string $username, CompositeExpression $additionalConditions = null): array;
 
     /**
-     * Creates a new admin user with.
+     * Creates a new admin user with admin privileges.
      */
-    public function createAdminUser(string $username): void;
-
-    /**
-     * Sets the deleted flag to 0 for the given user record uid.
-     *
-     * @param array<string, mixed> $userRecord
-     */
-    public function restoreUser(array $userRecord): void;
+    public function createAdminUser(string $username, string $hashedPassword): void;
 }

@@ -11,7 +11,7 @@ if (\TYPO3\CMS\Core\Core\Environment::getContext()->isDevelopment()) {
     $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['backend']['loginProviders']['static_auth'] = [
         'provider' => \Codemonkey1988\BeStaticAuth\LoginProvider\StaticAdminProvider::class,
         'sorting' => 30,
-        'icon-class' => 'fa-key',
+        'iconIdentifier' => 'actions-globe',
         'label' => 'LLL:EXT:be_static_auth/Resources/Private/Language/locallang_be.xlf:backendLogin.switch.label'
     ];
 
@@ -28,7 +28,7 @@ if (\TYPO3\CMS\Core\Core\Environment::getContext()->isDevelopment()) {
             'quality' => 50,
             'os' => '',
             'exec' => '',
-            'className' => \Codemonkey1988\BeStaticAuth\Service\StaticAuthenticationService::class
+            'className' => \Codemonkey1988\BeStaticAuth\Service\StaticAuthenticationService::class,
         ]
     );
 }

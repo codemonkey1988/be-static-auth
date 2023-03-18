@@ -7,5 +7,17 @@ services:
   Codemonkey1988\BeStaticAuth\:
     resource: '../Classes/*'
 
+  passwordHashStrategy.backend:
+    class: TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashInterface
+    factory: [ '@TYPO3\CMS\Core\Crypto\PasswordHashing\PasswordHashFactory', 'getDefaultHashInstance' ]
+    arguments: [ 'BE' ]
+
+  Codemonkey1988\BeStaticAuth\UserProvider\BackendUserFactory:
+    public: true
+    arguments:
+      - '@Codemonkey1988\BeStaticAuth\UserProvider\BackendUserProvider'
+      - '@passwordHashStrategy.backend'
+      - '@Codemonkey1988\BeStaticAuth\Password\RandomPasswordGenerator'
+
   Codemonkey1988\BeStaticAuth\Service\StaticAuthenticationService:
     public: true
