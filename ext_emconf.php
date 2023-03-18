@@ -18,7 +18,7 @@ $EM_CONF['be_static_auth'] = [
     'version' => '4.0.0-dev',
     'constraints' => [
         'depends' => [
-            'typo3' => '11.4.0-11.5.99',
+            'typo3' => '11.5.0-11.5.99',
         ],
         'conflicts' => [],
         'suggests' => [],
