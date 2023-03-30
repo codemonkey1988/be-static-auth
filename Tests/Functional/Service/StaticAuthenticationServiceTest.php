@@ -14,6 +14,7 @@ namespace Codemonkey1988\BeStaticAuth\Tests\Functional\Service;
 use Codemonkey1988\BeStaticAuth\Service\StaticAuthenticationService;
 use TYPO3\CMS\Core\Authentication\BackendUserAuthentication;
 use TYPO3\CMS\Core\Http\ServerRequest;
+use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
@@ -33,9 +34,16 @@ final class StaticAuthenticationServiceTest extends FunctionalTestCase
 
         parent::setUp();
 
+        $typo3Version = new Typo3Version();
         $backendUserAuthentication = $this->initBackendUserAuthentication();
-        /** @var AuthenticationInformation $authInfo */
-        $authInfo = $backendUserAuthentication->getAuthInfoArray();
+        if (version_compare($typo3Version->getBranch(), '12.3', '>=')) {
+            $request = new ServerRequest();
+            /** @var AuthenticationInformation $authInfo */
+            $authInfo = $backendUserAuthentication->getAuthInfoArray($request);
+        } else {
+            /** @var AuthenticationInformation $authInfo */
+            $authInfo = $backendUserAuthentication->getAuthInfoArray();
+        }
         $this->subject = $this->get(StaticAuthenticationService::class);
         $this->subject->initAuth(
             'auth',

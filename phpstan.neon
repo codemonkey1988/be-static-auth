@@ -5,6 +5,9 @@ parameters:
     - Configuration
     - Tests
     - ext_emconf.php
+  excludePaths:
+  	# Excluded because in TYPO3 12.3 the method AbstractUserAuthenticatoin::getAuthInfoArray has an argument.
+  	- Tests/Functional/Service/StaticAuthenticationServiceTest.php
 
 includes:
 	- .Build/vendor/saschaegerer/phpstan-typo3/extension.neon

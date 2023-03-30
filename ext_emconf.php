@@ -12,13 +12,13 @@ $EM_CONF['be_static_auth'] = [
     'description' => 'Adds a button to backend login that automatically creates an admin user and log in using it.',
     'category' => 'services',
     'author' => 'Tim Schreiner',
-    'author_email' => 'schreiner.tim@gmail.com',
-    'state' => 'beta',
+    'author_email' => 'dev@tim-schreiner.de',
+    'state' => 'stable',
     'clearCacheOnLoad' => true,
     'version' => '4.0.0-dev',
     'constraints' => [
         'depends' => [
-            'typo3' => '11.5.0-12.2.99',
+            'typo3' => '11.5.0-12.3.99',
         ],
         'conflicts' => [],
         'suggests' => [],
