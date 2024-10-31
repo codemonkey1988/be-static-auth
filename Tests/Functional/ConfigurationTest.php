@@ -14,6 +14,9 @@ namespace Codemonkey1988\BeStaticAuth\Tests\Functional;
 use Codemonkey1988\BeStaticAuth\Configuration;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
+/**
+ * @covers \Codemonkey1988\BeStaticAuth\Configuration
+ */
 class ConfigurationTest extends FunctionalTestCase
 {
     protected function setUp(): void

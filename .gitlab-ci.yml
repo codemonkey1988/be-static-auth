@@ -37,13 +37,13 @@ lint-php:
     - find . -name \*.php ! -path "./.Build/*" -exec php -d display_errors=stderr -l {} > /dev/null \;
   parallel:
     matrix:
-      - PHP_VERSION: [ '7.4', '8.0', '8.1', '8.2' ]
+      - PHP_VERSION: [ '8.1', '8.2', '8.3' ]
 
 codestyle-php:
   stage: lint
   except:
     - master
-  image: registry.gitlab.com/codemonkey1988/docker-composer-image:2-php7.4
+  image: registry.gitlab.com/codemonkey1988/docker-composer-image:2-php8.1
   before_script:
     - mkdir -p .composer/cache
     - COMPOSER_CACHE_DIR=.composer/cache composer install
@@ -73,10 +73,10 @@ php:phpstan:
       - .composer/cache
   parallel:
     matrix:
+      - TYPO3_VERSION: '^13.4'
+        PHP_VERSION: [ '8.2', '8.3' ]
       - TYPO3_VERSION: '^12.4'
         PHP_VERSION: [ '8.1', '8.2' ]
-      - TYPO3_VERSION: '^11.5'
-        PHP_VERSION: [ '7.4', '8.0', '8.1', '8.2' ]
 
 unit-tests:
   stage: test
@@ -103,10 +103,10 @@ unit-tests:
         --coverage-clover build/reports/clover-unit.xml
   parallel:
     matrix:
+      - TYPO3_VERSION: '^13.4'
+        PHP_VERSION: [ '8.2', '8.3' ]
       - TYPO3_VERSION: '^12.4'
         PHP_VERSION: [ '8.1', '8.2' ]
-      - TYPO3_VERSION: '^11.5'
-        PHP_VERSION: [ '7.4', '8.0', '8.1', '8.2' ]
   cache:
     key: composer-cache
     paths:
@@ -154,10 +154,10 @@ functional-tests:
         --coverage-clover build/reports/clover-functional.xml
   parallel:
     matrix:
+      - TYPO3_VERSION: '^13.4'
+        PHP_VERSION: [  '8.2', '8.3' ]
       - TYPO3_VERSION: '^12.4'
         PHP_VERSION: [ '8.1', '8.2' ]
-      - TYPO3_VERSION: '^11.5'
-        PHP_VERSION: [ '7.4', '8.0', '8.1', '8.2' ]
   cache:
     key: composer-cache
     paths:

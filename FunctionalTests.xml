@@ -15,18 +15,13 @@
   failOnRisky="true"
   xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.0/phpunit.xsd"
   cacheDirectory=".phpunit.cache"
-  requireCoverageMetadata="false"
+  requireCoverageMetadata="true"
 >
-  <coverage
-    includeUncoveredFiles="true"
-    pathCoverage="false"
-    ignoreDeprecatedCodeUnits="true"
-    disableCodeCoverageIgnore="true"
-  >
+  <source>
     <include>
-      <directory suffix=".php">Classes</directory>
+      <directory>Classes</directory>
     </include>
-  </coverage>
+  </source>
 
   <testsuites>
     <testsuite name="BE static auth">
