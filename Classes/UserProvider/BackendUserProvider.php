@@ -63,7 +63,7 @@ final class BackendUserProvider implements UserProviderInterface
      * @return array{uid: int, pid: int, username: string}
      * @throws UserNotFoundException
      */
-    public function getUserByUsernameWithoutRestrictions(string $username, CompositeExpression $additionalConditions = null): array
+    public function getUserByUsernameWithoutRestrictions(string $username, ?CompositeExpression $additionalConditions = null): array
     {
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable($this->tableName);
         $queryBuilder->getRestrictions()->removeAll();

@@ -18,7 +18,7 @@ interface UserProviderInterface
      *
      * @return array<string, mixed>
      */
-    public function getUserByUsernameWithoutRestrictions(string $username, CompositeExpression $additionalConditions = null): array;
+    public function getUserByUsernameWithoutRestrictions(string $username, ?CompositeExpression $additionalConditions = null): array;
 
     /**
      * Creates a new admin user with admin privileges.
